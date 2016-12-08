@@ -67,14 +67,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.start:
-//                        getTest();
+                        getTest();
 //        postFormTest();
 //        postFormDataTest();
 //        postBodyTest();
 //        postBodyTest2();
 //                urlTest();
 //                downloadFileTest();
-                postStringTest();
+//                postStringTest();
                 break;
             case R.id.cancel:
                 if (null != this.call) call.cancel();
@@ -116,8 +116,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void getTest() {
-
-        VersionUpdateService versionUpdateService = ServiceGenerator.createService(VersionUpdateService.class);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://api-beauty.51yishijia.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+//                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())//RXJAVA
+                .client(HttpClientProvider.build())
+                .build();
+        VersionUpdateService versionUpdateService = retrofit.create(VersionUpdateService.class);
 
         //path
         String path_v1 = "v1";
@@ -141,6 +146,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         call.enqueue(new Callback<VersionEntity>() {
             @Override
             public void onResponse(Call<VersionEntity> call, retrofit2.Response<VersionEntity> response) {
+                String name = Thread.currentThread().getName();//main
                 System.out.println(response.body());
             }
 
@@ -172,6 +178,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     /**
      * POST Body
+     * 能够实现任何POST请求
      */
     private void postBodyTest() {
 
@@ -212,7 +219,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         //普通的Post请求
         RequestBody postBody = RequestBody.create(null, "content");
-        call = versionUpdateService.doPostBody(postBody);
+//        call = versionUpdateService.doPostBody(postBody);
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -263,7 +270,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         });
     }
 
-
+    /**
+     * Form表单请求
+     */
     private void postFormTest() {
         VersionUpdateService versionUpdateService = ServiceGenerator.createService(VersionUpdateService.class);
 
@@ -312,7 +321,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
    */
     }
 
-
+    /**
+     * Form表单上传文件
+     */
     private void postFormDataTest() {
         VersionUpdateService versionUpdateService = ServiceGenerator.createService(VersionUpdateService.class);
 
@@ -360,11 +371,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     }
 
+    /**
+     * 文件下载
+     */
     private void downloadFileTest() {
         String url = "http://www.taobanapp.com/app/Android_uc.apk";
         OkHttpClient httpClient = HttpClientProvider.build();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://www.taobanapp.com")
+                .baseUrl("http://www.baidu.com")
 //                .client(httpClient)
                 .build();
         VersionUpdateService versionUpdateService = retrofit.create(VersionUpdateService.class);

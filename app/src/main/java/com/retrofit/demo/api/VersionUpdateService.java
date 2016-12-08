@@ -33,6 +33,7 @@ import retrofit2.http.Url;
  */
 public interface VersionUpdateService {
 
+    //----------------GET请求
     @Headers(
             {
                     "header1: value1",
@@ -46,7 +47,7 @@ public interface VersionUpdateService {
                               @Header("header3") String header3,
                               @HeaderMap Map<String, String> headMap);
 
-
+    //----------------表单请求
     @Headers(
             {
                     "header1: value1",
@@ -54,12 +55,12 @@ public interface VersionUpdateService {
             }
     )
     @POST("api/{version}/updateVersion")
-    @FormUrlEncoded
+    @FormUrlEncoded //代表表单请求
     Call<VersionEntity> doPostForm(@Path("version") String version, @Field("from") String field, @FieldMap Map<String, String> fieldMap);
 
 
     @POST("api/{version}/updateVersion")
-    @Multipart
+    @Multipart //代表表单上传文件
     Call<VersionEntity> doPostFormData(
             @Path("version") String version,
             @Part MultipartBody.Part file, //对于MultipartBody.Part  不能指定名称，创建Part时指定  MultipartBody.Part.createFormData("img", file.getName(), requestFile);
