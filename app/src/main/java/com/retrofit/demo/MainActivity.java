@@ -1,6 +1,7 @@
 package com.retrofit.demo;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -52,7 +53,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
         findViewById(R.id.start).setOnClickListener(this);
         findViewById(R.id.cancel).setOnClickListener(this);
-
+        findViewById(R.id.twoAct).setVisibility(View.VISIBLE);
+        findViewById(R.id.twoAct).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this,TwoActivity.class));
+            }
+        });
 
     }
 
