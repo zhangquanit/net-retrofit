@@ -1,0 +1,373 @@
+如果不使用Converter，请求体只能使用RequestyBody,响应信息只能使用ResponseBody
+官网：http://square.github.io/retrofit/
+教程：https://futurestud.io/tutorials/retrofit-getting-started-and-android-client
+一、Authorization消息头
+1、Basic Authorization
+消息头格式 Authorization: Basic username:password
+比如
+String credentials = username + ":" + password;
+final String basic ="Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+
+设置消息头 
+builder.header("Authorization", basic)
+
+2、Token Authorization
+消息头格式 Authorization: authToken
+
+设置消息头 
+builder.header("Authorization", authToken)
+
+3、Oauth 
+消息头格式 Authorization: tokenType accessToken
+
+设置消息头
+builder.header("Authorization", tokenType+" "+accessToken);
+
+
+
+二、多个同名请求参数
+https://api.example.com/tasks?id=123&id=124&id=125  
+
+public interface TaskService {  
+    @GET("/tasks")
+    Call<List<Task>> getTask(@Query("id") List<Long> taskIds);
+}
+
+三、上传文件
+Retrofit2.0使用RequestBody or MultipartBody.Part上传文件
+public interface FileUploadService {  
+    @Multipart
+    @POST("upload")
+    Call<ResponseBody> upload(@Part("description") RequestBody description,
+                              @Part MultipartBody.Part file);
+}
+
+调用
+File file = FileUtils.getFile(this, fileUri);
+RequestBody requestFile =
+		RequestBody.create(MediaType.parse("multipart/form-data"), file);
+
+// MultipartBody.Part is used to send also the actual file name
+MultipartBody.Part body =
+		MultipartBody.Part.createFormData("picture", file.getName(), requestFile);
+
+// add another part within the multipart request
+String descriptionString = "hello, this is description speaking";
+RequestBody description =
+		RequestBody.create(
+				MediaType.parse("multipart/form-data"), descriptionString);
+			
+四、日志
+在build.gradle中添加
+compile 'com.squareup.okhttp3:logging-interceptor:3.3.1'  
+
+
+HttpLoggingInterceptor logging = new HttpLoggingInterceptor();  
+// set your desired log level
+logging.setLevel(Level.BODY);
+
+OkHttpClient.Builder httpClient = new OkHttpClient.Builder();  
+// add your other interceptors …
+
+// add logging as last interceptor 作为最后一个Interceptor来添加
+httpClient.addInterceptor(logging);  // <-- this is the important line!
+
+Retrofit retrofit = new Retrofit.Builder()  
+   .baseUrl(API_BASE_URL)
+   .addConverterFactory(GsonConverterFactory.create())
+   .client(httpClient.build())
+   .build();			
+注意：
+1、建议把日志最为一个Interceptor来添加，因为这样它可以记录之前添加的Intercepter信息
+2、关于Log Levels
+过多的日志信息会沾满Android monitor，所以提供了四种Level： NONE, BASIC, HEADERS
+NONE 
+什么都不会记录
+
+Basic
+Log request type, url, size of request body, response status and size of response body.
+比如：
+D/HttpLoggingInterceptor$Logger: --> POST /upload HTTP/1.1 (277-byte body)  
+D/HttpLoggingInterceptor$Logger: <-- HTTP/1.1 200 OK (543ms, -1-byte body)  
+
+Headers
+Log request and response headers, request type, url, response status.
+比如：
+D/HttpLoggingInterceptor$Logger: --> POST /upload HTTP/1.1  
+D/HttpLoggingInterceptor$Logger: Accept: application/json  
+D/HttpLoggingInterceptor$Logger: Content-Type: application/json  
+D/HttpLoggingInterceptor$Logger: --> END POST  
+D/HttpLoggingInterceptor$Logger: <-- HTTP/1.1 200 OK (1039ms)  
+D/HttpLoggingInterceptor$Logger: content-type: text/html; charset=utf-8  
+D/HttpLoggingInterceptor$Logger: cache-control: no-cache  
+D/HttpLoggingInterceptor$Logger: vary: accept-encoding  
+D/HttpLoggingInterceptor$Logger: Date: Wed, 28 Oct 2015 08:24:20 GMT  
+D/HttpLoggingInterceptor$Logger: Connection: keep-alive  
+D/HttpLoggingInterceptor$Logger: Transfer-Encoding: chunked  
+D/HttpLoggingInterceptor$Logger: OkHttp-Selected-Protocol: http/1.1  
+D/HttpLoggingInterceptor$Logger: OkHttp-Sent-Millis: 1446020610352  
+D/HttpLoggingInterceptor$Logger: OkHttp-Received-Millis: 1446020610369  
+D/HttpLoggingInterceptor$Logger: <-- END HTTP  
+
+BODY
+Log request and response headers and body.
+比如：
+D/HttpLoggingInterceptor$Logger: --> POST /upload HTTP/1.1  
+D/HttpLoggingInterceptor$Logger: --9df820bb-bc7e-4a93-bb67-5f28f4140795  
+D/HttpLoggingInterceptor$Logger: Content-Disposition: form-data; name="description"  
+D/HttpLoggingInterceptor$Logger: Content-Transfer-Encoding: binary  
+D/HttpLoggingInterceptor$Logger: Content-Type: application/json; charset=UTF-8  
+D/HttpLoggingInterceptor$Logger: Content-Length: 37  
+D/HttpLoggingInterceptor$Logger:  
+D/HttpLoggingInterceptor$Logger: "hello, this is description speaking"  
+D/HttpLoggingInterceptor$Logger: --9df820bb-bc7e-4a93-bb67-5f28f4140795--  
+D/HttpLoggingInterceptor$Logger: --> END POST (277-byte body)  
+D/HttpLoggingInterceptor$Logger: <-- HTTP/1.1 200 OK (1099ms)  
+D/HttpLoggingInterceptor$Logger: content-type: text/html; charset=utf-8  
+D/HttpLoggingInterceptor$Logger: cache-control: no-cache  
+D/HttpLoggingInterceptor$Logger: vary: accept-encoding  
+D/HttpLoggingInterceptor$Logger: Date: Wed, 28 Oct 2015 08:33:40 GMT  
+D/HttpLoggingInterceptor$Logger: Connection: keep-alive  
+D/HttpLoggingInterceptor$Logger: Transfer-Encoding: chunked  
+D/HttpLoggingInterceptor$Logger: OkHttp-Selected-Protocol: http/1.1  
+D/HttpLoggingInterceptor$Logger: OkHttp-Sent-Millis: 1446021170095  
+D/HttpLoggingInterceptor$Logger: OkHttp-Received-Millis: 1446021170107  
+D/HttpLoggingInterceptor$Logger: Perfect!  
+D/HttpLoggingInterceptor$Logger: <-- END HTTP (8-byte body)  
+
+
+
+五、Hawk Authentication
+https://futurestud.io/tutorials/retrofit-2-hawk-authentication-on-android
+
+六、给每个请求url统一添加参数
+httpClient.addInterceptor(new Interceptor() {  
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request original = chain.request();
+        HttpUrl originalHttpUrl = original.url();
+
+        HttpUrl url = originalHttpUrl.newBuilder()
+                .addQueryParameter("apikey", "your-actual-api-key")
+                .build();
+
+        // Request customization: add request headers
+        Request.Builder requestBuilder = original.newBuilder()
+                .url(url);
+
+        Request request = requestBuilder.build();
+        return chain.proceed(request);
+    }
+});
+
+六、 Use Dynamic Urls for Requests
+使用场景
+1、上传用户头像
+服务器可能为其他url
+2、下载文件
+与接口服务不在同一个服务器上
+
+使用@Url注解
+public interface UserService {  
+    @GET
+    public Call<ResponseBody> profilePicture(@Url String url);
+}
+@GET没有指定url，而在方法参数上使用了@Url
+
+调用
+Retrofit retrofit = Retrofit.Builder()  
+    .baseUrl("https://your.api.url/");
+    .build();
+
+UserService service = retrofit.create(UserService.class);  
+service.profilePicture("https://s3.amazon.com/profile-picture/path");//指定不同请求url
+
+工作原理
+Because you set a completely different host including a scheme (https://s3.amazon.com vs. https://your.api.url), the HttpUrl from OkHttp will resolve it to the dynamic one.
+
+
+关于@Url的注意事项
+Retrofit retrofit = Retrofit.Builder()  
+    .baseUrl("https://your.api.url/");
+    .build();
+
+UserService service = retrofit.create(UserService.class);  
+service.profilePicture("profile-picture/path");
+
+最终请求url：https://your.api.url/profile-picture/path
+
+Retrofit retrofit = Retrofit.Builder()  
+    .baseUrl("https://your.api.url/v2/");
+    .build();
+
+UserService service = retrofit.create(UserService.class);  
+service.profilePicture("/profile-picture/path");
+
+最终请求url：https://your.api.url/profile-picture/path
+为什么不是：https://your.api.url/v2/profile-picture/path
+因为如果path是以/开头，则会直接添加到baseUrl的host后面，上例是https://your.api.url。
+
+
+
+
+Url Handling, Resolution and Parsing
+1、对于baseurl，必须以/结尾，否则会抛异常
+对于动态path部分，注意相对和绝对的区别。
+让我们看下面2个结果
+# Good Practise
+base url: https://futurestud.io/api/  
+endpoint: my/endpoint  
+Result:   https://futurestud.io/api/my/endpoint
+
+# Bad Practise
+base url: https://futurestud.io/api  
+endpoint: /my/endpoint  
+Result:   https://futurestud.io/my/endpoint  
+
+
+------------ 以/开头也有一定使用场景的，比如下面就演示了api中同时存在V3和V2的情况
+# Example 1
+base url: https://futurestud.io/api/v3/       最新使用V3的api
+endpoint: my/endpoint  
+Result:   https://futurestud.io/api/v3/my/endpoint
+
+# Example 2
+base url: https://futurestud.io/api/v3/      
+endpoint: /api/v2/another/endpoint             对于部分api，还是用V2
+Result:   https://futurestud.io/api/v2/another/endpoint  
+
+
+
+------------- 以//开头，只保留baseurl中的schema
+
+# Example 3 — completely different url
+base url: http://futurestud.io/api/  
+endpoint: https://api.futurestud.io/  
+Result:   https://api.futurestud.io/
+
+# Example 4 — Keep the base url’s scheme
+base url: https://futurestud.io/api/  
+endpoint: //api.futurestud.io/  
+Result:   https://api.futurestud.io/
+
+# Example 5 — Keep the base url’s scheme
+base url: http://futurestud.io/api/  
+endpoint: //api.github.com  
+Result:   http://api.github.com  
+
+
+
+@Streaming
+文件下载
+默认情况下，在处理结果前，Retrofit会将整个http response保存到内存中，所以下载大文件时，很容易导致Out-of-Memory-Errors.
+为了避免这种情况，就可以使用@Streaming，注意必须在独立线程中去操作。否则会报android.os.NetworkOnMainThreadException.
+
+inal FileDownloadService downloadService =  
+                ServiceGenerator.create(FileDownloadService.class);
+
+new AsyncTask<Void, Long, Void>() {  
+   @Override
+   protected Void doInBackground(Void... voids) {
+       Call<ResponseBody> call = downloadService.downloadFileWithDynamicUrlSync(fileUrl);
+       call.enqueue(new Callback<ResponseBody>() {
+           @Override
+           public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+               if (response.isSuccess()) {
+                   Log.d(TAG, "server contacted and has file");
+
+                   boolean writtenToDisk = writeResponseBodyToDisk(response.body()); //下载文件
+
+                   Log.d(TAG, "file download was a success? " + writtenToDisk);
+               }
+               else {
+                   Log.d(TAG, "server contact failed");
+               }
+           }
+       return null;
+   }
+}.execute(); 
+
+
+取消请求
+call.cancel()；
+注意，取消请求会导致onFailure()的回调，而我们通常会在onFailure()回调中通知用户错误信息，所以对于cancel的请求回调是不应该通知用户的。
+new Callback<ResponseBody>() {  
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.d(TAG, "request success");
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                if (call.isCanceled()) { //取消的请求
+                    Log.e(TAG, "request was cancelled");
+                }
+                else {
+                    Log.e(TAG, "other larger issue, i.e. no network connection?");
+                }
+
+            }
+        };
+
+检查request		
+originalCall.enqueue(new Callback<ResponseBody>() {  
+    @Override
+    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+        checkRequestContent(call.request());
+    }
+
+    @Override
+    public void onFailure(Call<ResponseBody> call, Throwable t) {
+        checkRequestContent(call.request());
+    }
+});
+private void checkRequestContent(Request request) {  
+    Headers requestHeaders = request.headers();
+    RequestBody requestBody = request.body();
+    HttpUrl requestUrl = request.url();
+
+    // todo make decision depending on request content
+}
+
+----------支持发送和返回Java基本数据类型和String类型
+ compile  'com.squareup.retrofit2:converter-scalars:2.1.0'
+ 
+Retrofit retrofit = new Retrofit.Builder()  
+        .addConverterFactory(ScalarsConverterFactory.create()) //支持发送String
+        .addConverterFactory(GsonConverterFactory.create //放在最后一个Converter
+        .baseUrl("https://your.base.url/")
+        .build(); 
+
+public interface ScalarService {  
+    @POST("path")
+    Call<String> getStringScalar(@Body String body);  //请求和响应都是String
+}		
+
+
+发送请求
+String body = "plain text request body";  
+Call<String> call = service.getStringScalar(body);
+
+Response<String> response = call.execute();  
+String value = response.body();  
+
+当然也可以使用RequestBody和ResponseBody完成
+public interface ScalarService {  
+    @POST("path")
+    Call<ResponseBody> getStringRequestBody(@Body RequestBody body);
+}
+发送请求
+String text = "plain text request body";  
+RequestBody body =  
+        RequestBody.create(MediaType.parse("text/plain"), text);
+
+Call<ResponseBody> call = service.getStringRequestBody(body);  
+Response<ResponseBody> response = call.execute();  
+String value = response.body().string();
+
+如果只想发送或返回String，则使用RequestBody和ResponseBody稍微麻烦一点
+
+
+
+
+

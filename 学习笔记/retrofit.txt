@@ -1,0 +1,95 @@
+@Query
+  boolean encoded() default false; 
+
+用于在url中拼接请求参数，如果参数值为null，则该请求参数不会拼接到url中（会被忽略掉）。
+允许同名的key，有多个参数值
+
+@GET("/search")
+Call<ResponseBody> list(@Query("key") String...filters);
+Call<ResponseBody> list(@Query("key") List<String> filters);
+ 
+list("value1","value2","value3") 
+效果：http://host/path?key=valu1&key=value2&key=value3
+encoded=true，将参数值进行编码，比如中文值。
+
+@QueryMap
+  boolean encoded() default false;
+  
+注意：不允许key或value为null。
+
+
+@Body
+param不允许为null
+
+@Field
+如果value=null，该该键值对会被忽略掉。
+@FieldMap
+  boolean encoded() default false;  
+注意：不允许key或value为null。
+
+Converter
+主要是用来序列化@Body 的Java Object对象为请求体，反序列化Response为Java Object。
+Retrofit retrofit = new Retrofit.Builder()
+			.baseUrl("http://blog.csdn.net/zhangquanit/")
+			.addConverterFactory(ScalarsConverterFactory.create()) //增加基本数据类型和String类型的转换器
+			.addConverterFactory(GsonConverterFactory.create()) //GSON转换器放在最后一个
+			.client(HttpClientProvider.build())
+			.build();
+
+
+------------------------------Retrofit原理------------------------------------------
+
+Retrofit使用注解来描述http请求，调用create()生成一个动态代理对象，调用接口方法时会将接口请求信息封装到ServiceMethod中，并返回Call<T> call;
+最后执行请求：同步call.execute()；或者异步call.enqueue(Callback callback); 执行请求时，会调用ServiceMethod生成真实的Okhttp.Call，并完成网络请求。
+
+对比Okhttp直接完成请求方式：
+1、构建Request对象.
+GET请求、Post请求(UrlEncoded，form-data)
+2、Call call=okHttpClient.newCall(request);
+3、call.enqueue(callback);
+
+Retrofit通过定义接口，接口方法用来描述业务操作，接口返回值为http响应结果,并巧妙地通过注解来描述http请求。然后创建动态代理类来代理该接口，调用接口方法时，获取相应的注解信息，
+生成真实的Okhttp请求。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
+			
+			
+			
+			
+			
