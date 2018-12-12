@@ -107,13 +107,13 @@ public final class Retrofit {
 
                         //使用Okhttp完成网络请求
                         OkHttpCall okHttpCall = new OkHttpCall<>(serviceMethod, args);
-                        return serviceMethod.callAdapter.adapt(okHttpCall);
+                        return serviceMethod.callAdapter.adapt(okHttpCall); //返回的是 ExecutorCallbackCall
                     }
                 });
     }
 
     private void eagerlyValidateMethods(Class<?> service) {
-        Platform platform = Platform.get();
+        Platform platform = Platform.get(); //Android上为Android平台
         for (Method method : service.getDeclaredMethods()) {
             if (!platform.isDefaultMethod(method)) {
                 loadServiceMethod(method);
@@ -172,12 +172,19 @@ public final class Retrofit {
      *
      * @throws IllegalArgumentException if no call adapter available for {@code type}.
      */
+    /**
+     *
+     * @param skipPast
+     * @param returnType  方法返回值类型，比如 retrofit2.Call<VersionEntity>
+     * @param annotations
+     * @return
+     */
     public CallAdapter<?> nextCallAdapter(CallAdapter.Factory skipPast, Type returnType,
                                           Annotation[] annotations) {
         checkNotNull(returnType, "returnType == null");
         checkNotNull(annotations, "annotations == null");
 
-        int start = adapterFactories.indexOf(skipPast) + 1;
+        int start = adapterFactories.indexOf(skipPast) + 1; //默认是ExecutorCallAdapterFactory
         for (int i = start, count = adapterFactories.size(); i < count; i++) {
             CallAdapter<?> adapter = adapterFactories.get(i).get(returnType, annotations, this);
             if (adapter != null) {
@@ -522,7 +529,7 @@ public final class Retrofit {
                 callbackExecutor = platform.defaultCallbackExecutor();
             }
 
-            // Make a defensive copy of the adapters and add the default Call adapter.
+            // 添加默认的ExecutorCallAdapterFactory
             List<CallAdapter.Factory> adapterFactories = new ArrayList<>(this.adapterFactories);
             adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));
 

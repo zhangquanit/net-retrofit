@@ -27,10 +27,10 @@ final class BuiltInConverters extends Converter.Factory {
   public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
       Retrofit retrofit) {
     if (type == ResponseBody.class) {
-      if (Utils.isAnnotationPresent(annotations, Streaming.class)) {
+      if (Utils.isAnnotationPresent(annotations, Streaming.class)) { //下载文件,不会读取到内存中，对于大文件下载，避免OOM
         return StreamingResponseBodyConverter.INSTANCE;
       }
-      return BufferingResponseBodyConverter.INSTANCE;
+      return BufferingResponseBodyConverter.INSTANCE; //会读取到内存中
     }
     if (type == Void.class) {
       return VoidResponseBodyConverter.INSTANCE;

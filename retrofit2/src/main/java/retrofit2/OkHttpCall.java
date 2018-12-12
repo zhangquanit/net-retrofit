@@ -97,7 +97,7 @@ final class OkHttpCall<T> implements Call<T> {
       }
     }
 
-    //异常回调
+    //异常回调(主线程)
     if (failure != null) {
       callback.onFailure(this, failure);
       return;
@@ -190,7 +190,7 @@ final class OkHttpCall<T> implements Call<T> {
   //创建okhttp3.Call
   private okhttp3.Call createRawCall() throws IOException {
     Request request = serviceMethod.toRequest(args);
-    okhttp3.Call call = serviceMethod.callFactory.newCall(request);
+    okhttp3.Call call = serviceMethod.callFactory.newCall(request);//OkHttpClient.newCall(request)
     if (call == null) {
       throw new NullPointerException("Call.Factory returned null.");
     }

@@ -78,10 +78,10 @@ Retrofit retrofit = new Retrofit.Builder()
    .client(httpClient.build())
    .build();			
 注意：
-1、建议把日志最为一个Interceptor来添加，因为这样它可以记录之前添加的Intercepter信息
+1、建议把日志最后一个Interceptor来添加，因为这样它可以记录之前添加的Intercepter信息
 2、关于Log Levels
-过多的日志信息会沾满Android monitor，所以提供了四种Level： NONE, BASIC, HEADERS
-NONE 
+过多的日志信息会沾满Android monitor，所以提供了四种Level： NONE, BASIC, HEADERS,BODY
+NONE
 什么都不会记录
 
 Basic

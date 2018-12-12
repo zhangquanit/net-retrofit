@@ -48,7 +48,7 @@ final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
             // 适配Call
             @Override
             public <R> Call<R> adapt(Call<R> call) {
-                return new ExecutorCallbackCall<>(callbackExecutor, call);
+                return new ExecutorCallbackCall<>(callbackExecutor, call); //call =OkHttpCall
             }
         };
     }

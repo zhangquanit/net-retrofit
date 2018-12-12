@@ -93,7 +93,9 @@ final class ServiceMethod<T> {
     this.parameterHandlers = builder.parameterHandlers;
   }
 
-  /** Builds an HTTP request from method arguments. */
+  /** Builds an HTTP request from method arguments.
+   *  根据参数创建OkHttp请求
+   * */
   Request toRequest(Object... args) throws IOException {
     RequestBuilder requestBuilder = new RequestBuilder(httpMethod, baseUrl, relativeUrl, headers,
             contentType, hasBody, isFormEncoded, isMultipart);
@@ -129,9 +131,9 @@ final class ServiceMethod<T> {
   static final class Builder<T> {
     final Retrofit retrofit;
     final Method method; //接口方法
-    final Annotation[] methodAnnotations; //接口方法上使用的注解，比如@GET，@Multipart
-    final Annotation[][] parameterAnnotationsArray; //接口方法参数上的注解，Annotation[方法参数index][方法参数上的注解]
-    final Type[] parameterTypes; //接口方法参数类型
+    final Annotation[] methodAnnotations; //接口方法上使用的注解，比如@GET，@Header
+    final Annotation[][] parameterAnnotationsArray; //接口方法参数上的注解，Annotation[方法参数index][方法参数上的注解]，比如[[Path]，[Query]]
+    final Type[] parameterTypes; //接口方法参数类型,比如String、Map
 
     Type responseType;
     boolean gotField;
@@ -169,7 +171,7 @@ final class ServiceMethod<T> {
                 + Utils.getRawType(responseType).getName()
                 + "' is not a valid response body type. Did you mean ResponseBody?");
       }
-      //创建Response转换器，轮询retrofit中的converters集合，取出第一个能够解析responseType的Converter
+      //创建Response转换器，轮询retrofit中的converters集合，取出第一个能够解析返回值的Converter，默认是BuiltInConverters
       responseConverter = createResponseConverter();
 
       //解析方法上的注解
@@ -230,7 +232,7 @@ final class ServiceMethod<T> {
     }
 
     private CallAdapter<?> createCallAdapter() {
-      Type returnType = method.getGenericReturnType();
+      Type returnType = method.getGenericReturnType(); //方法返回类型，比如Retrofit2.Call<VersionEntity>
       if (Utils.hasUnresolvableType(returnType)) {
         throw methodError(
                 "Method return type must not include a type variable or wildcard: %s", returnType);
@@ -238,7 +240,7 @@ final class ServiceMethod<T> {
       if (returnType == void.class) {
         throw methodError("Service methods cannot return void.");
       }
-      Annotation[] annotations = method.getAnnotations();
+      Annotation[] annotations = method.getAnnotations(); //方法上的注解，比如@Headers、@GET
       try {
         return retrofit.callAdapter(returnType, annotations);
       } catch (RuntimeException e) { // Wide exception range because factories are user code.

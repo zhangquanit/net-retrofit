@@ -81,7 +81,7 @@ public interface VersionUpdateService {
     /**
      * @param body
      * @return
-     * @Body 如果使用Converter，@Body的参数类型可以为Converter支持反序列化的普通JavaBean，返回普通JavaBean
+     * @Body 如果使用Converter，@Body的参数类型可以为Converter支持反序列化的普通JavaBean(实际上也是通过Converter转换为RequestBody)，返回普通JavaBean
      */
     @POST("api/v1/updateVersion")
     Call<VersionEntity> doPostBody2(@Body VersionPostData body);

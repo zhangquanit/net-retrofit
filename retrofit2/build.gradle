@@ -29,4 +29,7 @@ dependencies {
 
     //converter
     compile 'com.google.code.gson:gson:2.7'
+
+    //RxJavaCallAdapter
+    compile 'io.reactivex:rxandroid:1.2.1'
 }
